@@ -10,12 +10,13 @@ resource "google_cloudbuild_trigger" "backend_deploy" {
     owner = var.github_owner
     name  = var.github_repo_name
     push {
-      branch = "^main$"
+      branch = var.github_deploy_branch
     }
   }
 
-  included_files = ["domain-shield-backend/**"]
-  filename       = "domain-shield-backend/cloudbuild.yaml"
+  # domain-shield-backend is its own repo (not a monorepo subfolder), so both
+  # paths are relative to that repo's root.
+  filename = "cloudbuild.yaml"
 
   depends_on = [google_project_service.apis]
 }

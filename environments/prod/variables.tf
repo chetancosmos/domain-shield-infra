@@ -36,11 +36,17 @@ variable "sendgrid_from_email" {
 }
 
 variable "github_owner" {
-  description = "GitHub username/org that owns the app repo (the one containing domain-shield-backend/)."
+  description = "GitHub username/org that owns the domain-shield-backend repo."
   type        = string
 }
 
 variable "github_repo_name" {
-  description = "GitHub repo name (not the full owner/repo path) containing domain-shield-backend/."
+  description = "The domain-shield-backend repo name (it's its own repo, not a monorepo subfolder)."
   type        = string
+}
+
+variable "github_deploy_branch" {
+  description = "Branch regex Cloud Build watches for pushes. Defaults to main; set to ^feature-gcp$ while that's still the active development branch."
+  type        = string
+  default     = "^main$"
 }
