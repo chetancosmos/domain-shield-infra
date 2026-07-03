@@ -1,6 +1,15 @@
+locals {
+  # google_service_account.runtime.email is treated as unknown-until-apply by
+  # the provider even though it's fully deterministic from account_id +
+  # project - computing it ourselves keeps it known at plan time, which
+  # matters because other modules use it as a for_each key (see outputs.tf).
+  service_account_id    = "${var.service_name}-run-sa"
+  service_account_email = "${local.service_account_id}@${var.project_id}.iam.gserviceaccount.com"
+}
+
 resource "google_service_account" "runtime" {
   project      = var.project_id
-  account_id   = "${var.service_name}-run-sa"
+  account_id   = local.service_account_id
   display_name = "Runtime SA for Cloud Run service ${var.service_name}"
 }
 
