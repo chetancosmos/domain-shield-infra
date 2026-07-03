@@ -51,7 +51,10 @@ module "secrets" {
     "domainshield-database-url"     = module.cloudsql.database_url
     "domainshield-redis-url"        = module.memorystore.redis_url
     "domainshield-jwt-secret"       = var.jwt_secret
-    "domainshield-sendgrid-api-key" = var.sendgrid_api_key
+    # Secret Manager rejects empty payloads, so fall back to a placeholder
+    # until a real key is set - harmless since ALERT_EMAIL_ENABLED stays
+    # false until sendgrid_api_key is non-empty (see cloud_run_api/worker env_vars).
+    "domainshield-sendgrid-api-key" = var.sendgrid_api_key != "" ? var.sendgrid_api_key : "not-configured"
   }
 
   accessor_service_accounts = [
