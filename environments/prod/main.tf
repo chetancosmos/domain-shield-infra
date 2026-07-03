@@ -43,7 +43,13 @@ module "storage" {
   bucket_name = "${var.project_id}-domainshield-screenshots"
 
   reader_service_accounts = [module.cloud_run_api.service_account_email]
-  writer_service_accounts = [module.cloud_run_worker.service_account_email]
+  # api needs write access too - POST /monitor/screenshot calls
+  # capture_screenshot() directly in the api service, not just the worker's
+  # scan pipeline.
+  writer_service_accounts = [
+    module.cloud_run_api.service_account_email,
+    module.cloud_run_worker.service_account_email,
+  ]
 }
 
 module "secrets" {
@@ -101,7 +107,10 @@ module "cloud_run_api" {
   # rapid capture clicks was enough to saturate capacity and get everything
   # else (even unrelated GETs) bounced with 429. This is just a ceiling, no
   # idle cost unless actually used.
-  max_instance_count    = 8
+  max_instance_count = 8
+  # Default 512Mi isn't enough for launching headless Chromium (on-demand
+  # screenshot capture) - it was getting OOM-killed mid-capture.
+  memory                = "1Gi"
   allow_unauthenticated = true
 
   env_vars = {
@@ -153,9 +162,12 @@ module "cloud_run_worker" {
   # Toggle worker_always_on before/after a scan expected to run long (large
   # brand names can generate tens of thousands of variants) - see worker.py's
   # /pubsub/push handler for why this needs to pair with cpu_idle=false.
-  min_instance_count    = var.worker_always_on ? 1 : 0
-  cpu_idle              = !var.worker_always_on
-  max_instance_count    = 2
+  min_instance_count = var.worker_always_on ? 1 : 0
+  cpu_idle           = !var.worker_always_on
+  max_instance_count = 2
+  # Same Chromium-needs-more-than-512Mi issue as api - the scan pipeline's
+  # screenshot capture step runs here too.
+  memory                = "1Gi"
   allow_unauthenticated = false
 
   env_vars = {
