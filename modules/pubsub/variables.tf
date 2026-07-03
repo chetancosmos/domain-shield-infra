@@ -19,9 +19,9 @@ variable "message_retention_duration" {
 }
 
 variable "ack_deadline_seconds" {
-  description = "600s (Pub/Sub's max) since the worker processes each scan synchronously before acking - see worker.py's /pubsub/push handler."
+  description = "The worker acks immediately and processes each scan as a background task (see worker.py's /pubsub/push handler), so this only needs to cover envelope validation + task spawn - not the scan itself."
   type        = number
-  default     = 600
+  default     = 60
 }
 
 variable "max_delivery_attempts" {

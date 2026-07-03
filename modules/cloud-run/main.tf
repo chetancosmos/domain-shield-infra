@@ -57,6 +57,10 @@ resource "google_cloud_run_v2_service" "service" {
           cpu    = var.cpu
           memory = var.memory
         }
+        # false = CPU always allocated (no throttling between requests), needed
+        # for reliable fire-and-forget background work. Costs more since the
+        # instance can't idle down to zero CPU - see var.cpu_idle description.
+        cpu_idle = var.cpu_idle
       }
 
       dynamic "env" {

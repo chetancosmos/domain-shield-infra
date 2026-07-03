@@ -137,16 +137,19 @@ module "cloud_run_api" {
 }
 
 module "cloud_run_worker" {
-  source                = "../../modules/cloud-run"
-  project_id            = var.project_id
-  region                = var.region
-  service_name          = "domainshield-worker"
-  image                 = var.worker_image
-  network_id            = module.network.network_id
-  subnet_id             = module.network.subnet_id
-  min_instance_count    = 0
+  source       = "../../modules/cloud-run"
+  project_id   = var.project_id
+  region       = var.region
+  service_name = "domainshield-worker"
+  image        = var.worker_image
+  network_id   = module.network.network_id
+  subnet_id    = module.network.subnet_id
+  # Toggle worker_always_on before/after a scan expected to run long (large
+  # brand names can generate tens of thousands of variants) - see worker.py's
+  # /pubsub/push handler for why this needs to pair with cpu_idle=false.
+  min_instance_count    = var.worker_always_on ? 1 : 0
+  cpu_idle              = !var.worker_always_on
   max_instance_count    = 2
-  timeout_seconds       = 600
   allow_unauthenticated = false
 
   env_vars = {

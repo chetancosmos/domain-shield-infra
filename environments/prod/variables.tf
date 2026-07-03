@@ -18,6 +18,12 @@ variable "worker_image" {
   default     = "us-docker.pkg.dev/cloudrun/container/hello"
 }
 
+variable "worker_always_on" {
+  description = "false (default): worker scales to zero, cheap. true: min_instance_count=1 + CPU always allocated, so long-running scans (large brand names) can finish reliably in the background without the instance being evicted mid-scan. Flip on before a big scan, off after to stop paying for it."
+  type        = bool
+  default     = false
+}
+
 variable "frontend_image" {
   description = "Initial frontend image. Deployed manually via docker build/push + gcloud run deploy (see domain-shield-frontend/Dockerfile) - no Cloud Build wiring for this one yet."
   type        = string

@@ -35,6 +35,12 @@ variable "min_instance_count" {
   default = 0
 }
 
+variable "cpu_idle" {
+  description = "true (default) throttles CPU between requests - cheap, fine for request/response workloads. Set false only when background work must keep running reliably after the response is sent (requires min_instance_count >= 1 to avoid the instance scaling to zero mid-work)."
+  type        = bool
+  default     = true
+}
+
 variable "max_instance_count" {
   type    = number
   default = 3
