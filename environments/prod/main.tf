@@ -87,15 +87,21 @@ module "cloud_run_frontend" {
 }
 
 module "cloud_run_api" {
-  source                = "../../modules/cloud-run"
-  project_id            = var.project_id
-  region                = var.region
-  service_name          = "domainshield-api"
-  image                 = var.api_image
-  network_id            = module.network.network_id
-  subnet_id             = module.network.subnet_id
-  min_instance_count    = 0
-  max_instance_count    = 2
+  source             = "../../modules/cloud-run"
+  project_id         = var.project_id
+  region             = var.region
+  service_name       = "domainshield-api"
+  image              = var.api_image
+  network_id         = module.network.network_id
+  subnet_id          = module.network.subnet_id
+  min_instance_count = 0
+  # Screenshot capture (POST /monitor/screenshot) launches a full headless
+  # Chromium browser and blocks the request for several seconds, tying up a
+  # whole instance/concurrency slot - with only 2 max instances, a couple of
+  # rapid capture clicks was enough to saturate capacity and get everything
+  # else (even unrelated GETs) bounced with 429. This is just a ceiling, no
+  # idle cost unless actually used.
+  max_instance_count    = 8
   allow_unauthenticated = true
 
   env_vars = {
