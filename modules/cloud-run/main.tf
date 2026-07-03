@@ -61,6 +61,9 @@ resource "google_cloud_run_v2_service" "service" {
         # for reliable fire-and-forget background work. Costs more since the
         # instance can't idle down to zero CPU - see var.cpu_idle description.
         cpu_idle = var.cpu_idle
+        # Extra CPU during the startup window only (no ongoing cost) - shortens
+        # cold starts, which matter more here since these scale to zero.
+        startup_cpu_boost = true
       }
 
       dynamic "env" {
