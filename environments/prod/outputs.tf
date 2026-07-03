@@ -6,6 +6,10 @@ output "worker_url" {
   value = module.cloud_run_worker.url
 }
 
+output "frontend_url" {
+  value = module.cloud_run_frontend.url
+}
+
 output "artifact_registry_url" {
   value = module.artifact_registry.repository_url
 }

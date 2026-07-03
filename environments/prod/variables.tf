@@ -18,6 +18,18 @@ variable "worker_image" {
   default     = "us-docker.pkg.dev/cloudrun/container/hello"
 }
 
+variable "frontend_image" {
+  description = "Initial frontend image. Deployed manually via docker build/push + gcloud run deploy (see domain-shield-frontend/Dockerfile) - no Cloud Build wiring for this one yet."
+  type        = string
+  default     = "us-docker.pkg.dev/cloudrun/container/hello"
+}
+
+variable "frontend_allow_unauthenticated" {
+  description = "true = anyone with the URL can load the app (needed for real users to reach it). Set false to lock it down to specific IAM principals later - same toggle used for api/worker."
+  type        = bool
+  default     = true
+}
+
 variable "jwt_secret" {
   description = "JWT signing secret. Generate with: openssl rand -hex 32"
   type        = string

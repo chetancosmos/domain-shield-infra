@@ -1,3 +1,7 @@
+data "google_project" "current" {
+  project_id = var.project_id
+}
+
 module "network" {
   source     = "../../modules/network"
   project_id = var.project_id
@@ -47,10 +51,10 @@ module "secrets" {
   project_id = var.project_id
 
   secrets = {
-    "domainshield-db-password"      = module.cloudsql.db_password
-    "domainshield-database-url"     = module.cloudsql.database_url
-    "domainshield-redis-url"        = module.memorystore.redis_url
-    "domainshield-jwt-secret"       = var.jwt_secret
+    "domainshield-db-password"  = module.cloudsql.db_password
+    "domainshield-database-url" = module.cloudsql.database_url
+    "domainshield-redis-url"    = module.memorystore.redis_url
+    "domainshield-jwt-secret"   = var.jwt_secret
     # Secret Manager rejects empty payloads, so fall back to a placeholder
     # until a real key is set - harmless since ALERT_EMAIL_ENABLED stays
     # false until sendgrid_api_key is non-empty (see cloud_run_api/worker env_vars).
@@ -67,6 +71,19 @@ module "pubsub" {
   source        = "../../modules/pubsub"
   project_id    = var.project_id
   push_endpoint = "${module.cloud_run_worker.url}/pubsub/push"
+}
+
+module "cloud_run_frontend" {
+  source                = "../../modules/cloud-run"
+  project_id            = var.project_id
+  region                = var.region
+  service_name          = "domainshield-frontend"
+  image                 = var.frontend_image
+  network_id            = module.network.network_id
+  subnet_id             = module.network.subnet_id
+  min_instance_count    = 0
+  max_instance_count    = 2
+  allow_unauthenticated = var.frontend_allow_unauthenticated
 }
 
 module "cloud_run_api" {
@@ -86,6 +103,17 @@ module "cloud_run_api" {
     PUBSUB_TOPIC_ID = module.pubsub.topic_name
     GCP_PROJECT_ID  = var.project_id
     ENVIRONMENT     = "production"
+    # CORS_ORIGINS is parsed as a JSON array by pydantic-settings (see config.py).
+    # Cloud Run serves each service under two URL aliases simultaneously (the
+    # random-hash one Terraform's `uri` attribute returns, and the project-number
+    # one `gcloud run deploy` prints) - both need to be allowed since either
+    # could end up being what a user actually loads.
+    CORS_ORIGINS = jsonencode([
+      module.cloud_run_frontend.url,
+      "https://domainshield-frontend-${data.google_project.current.number}.${var.region}.run.app",
+      "http://localhost:3000",
+      "http://127.0.0.1:3000",
+    ])
     # notifier.py speaks plain SMTP - SendGrid's relay accepts it directly, no
     # SendGrid-specific SDK/code needed. ALERT_EMAIL_ENABLED flips on once a
     # real API key is supplied via sendgrid_api_key.
