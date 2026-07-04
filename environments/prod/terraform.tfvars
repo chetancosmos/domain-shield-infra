@@ -12,6 +12,9 @@ github_deploy_branch = "^feature-gcp$"
 # -var-file=secrets.auto.tfvars (gitignored) or TF_VAR_jwt_secret env var.
 # sendgrid_api_key same story; defaults to "" (SendGrid disabled) until set.
 
-# Flip to true before a scan expected to run long (large brand names),
-# false again after - see modules/cloud-run's cpu_idle description.
-worker_always_on = false
+# Permanently on: scans running under cpu_idle=true were observed to hang
+# indefinitely (not just slow down) once the Pub/Sub ack response completes
+# and CPU gets throttled mid-background-task, with no automatic retry since
+# the message is already acked. Reliability over the small extra always-on
+# cost - see modules/cloud-run's cpu_idle description.
+worker_always_on = true

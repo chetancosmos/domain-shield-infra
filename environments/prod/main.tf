@@ -27,15 +27,6 @@ module "cloudsql" {
   depends_on = [module.network]
 }
 
-module "memorystore" {
-  source     = "../../modules/memorystore"
-  project_id = var.project_id
-  region     = var.region
-  network_id = module.network.network_id
-
-  depends_on = [module.network]
-}
-
 module "storage" {
   source      = "../../modules/storage"
   project_id  = var.project_id
@@ -59,7 +50,6 @@ module "secrets" {
   secrets = {
     "domainshield-db-password"  = module.cloudsql.db_password
     "domainshield-database-url" = module.cloudsql.database_url
-    "domainshield-redis-url"    = module.memorystore.redis_url
     "domainshield-jwt-secret"   = var.jwt_secret
     # Secret Manager rejects empty payloads, so fall back to a placeholder
     # until a real key is set - harmless since ALERT_EMAIL_ENABLED stays
@@ -141,7 +131,6 @@ module "cloud_run_api" {
 
   secret_env_vars = {
     DATABASE_URL  = module.secrets.secret_ids["domainshield-database-url"]
-    REDIS_URL     = module.secrets.secret_ids["domainshield-redis-url"]
     JWT_SECRET    = module.secrets.secret_ids["domainshield-jwt-secret"]
     SMTP_PASSWORD = module.secrets.secret_ids["domainshield-sendgrid-api-key"]
   }
@@ -185,7 +174,6 @@ module "cloud_run_worker" {
 
   secret_env_vars = {
     DATABASE_URL = module.secrets.secret_ids["domainshield-database-url"]
-    REDIS_URL    = module.secrets.secret_ids["domainshield-redis-url"]
     # JWT_SECRET isn't used by worker logic, but Settings() validates it as
     # required at import time - omitting it would crash the container on boot.
     JWT_SECRET    = module.secrets.secret_ids["domainshield-jwt-secret"]

@@ -22,10 +22,6 @@ output "cloudsql_private_ip" {
   value = module.cloudsql.private_ip_address
 }
 
-output "redis_host" {
-  value = module.memorystore.host
-}
-
 output "pubsub_topic" {
   value = module.pubsub.topic_name
 }
