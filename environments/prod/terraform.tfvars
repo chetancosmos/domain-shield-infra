@@ -12,6 +12,10 @@ github_deploy_branch = "^feature-gcp$"
 # -var-file=secrets.auto.tfvars (gitignored) or TF_VAR_jwt_secret env var.
 # sendgrid_api_key same story; defaults to "" (SendGrid disabled) until set.
 
+# No custom domain for this POC yet, so alerts come from a personal Gmail
+# address verified in SendGrid via Single Sender Verification.
+sendgrid_from_email = "chetan15cosmos@gmail.com"
+
 # Permanently on: scans running under cpu_idle=true were observed to hang
 # indefinitely (not just slow down) once the Pub/Sub ack response completes
 # and CPU gets throttled mid-background-task, with no automatic retry since

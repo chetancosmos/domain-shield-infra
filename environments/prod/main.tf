@@ -127,6 +127,10 @@ module "cloud_run_api" {
     SMTP_USER           = "apikey"
     SMTP_FROM           = var.sendgrid_from_email
     ALERT_EMAIL_ENABLED = var.sendgrid_api_key != "" ? "true" : "false"
+    # Overrides config.py's placeholder app.domainshield.io default - we have
+    # no custom domain yet, so scan-alert email links and invite links need
+    # to point at the actual Cloud Run frontend URL instead of 404ing.
+    APP_URL = module.cloud_run_frontend.url
   }
 
   secret_env_vars = {
@@ -170,6 +174,9 @@ module "cloud_run_worker" {
     SMTP_USER           = "apikey"
     SMTP_FROM           = var.sendgrid_from_email
     ALERT_EMAIL_ENABLED = var.sendgrid_api_key != "" ? "true" : "false"
+    # Overrides config.py's placeholder app.domainshield.io default - the
+    # "Review in DomainShield" button in scan-alert emails links here.
+    APP_URL = module.cloud_run_frontend.url
   }
 
   secret_env_vars = {
