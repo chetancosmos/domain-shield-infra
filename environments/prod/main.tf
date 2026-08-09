@@ -31,7 +31,7 @@ module "storage" {
   source      = "../../modules/storage"
   project_id  = var.project_id
   region      = var.region
-  bucket_name = "${var.project_id}-domainshield-screenshots"
+  bucket_name = "${var.project_id}-sentrydom-screenshots"
 
   reader_service_accounts = [module.cloud_run_api.service_account_email]
   # api needs write access too - POST /monitor/screenshot calls
@@ -48,13 +48,13 @@ module "secrets" {
   project_id = var.project_id
 
   secrets = {
-    "domainshield-db-password"  = module.cloudsql.db_password
-    "domainshield-database-url" = module.cloudsql.database_url
-    "domainshield-jwt-secret"   = var.jwt_secret
+    "sentrydom-db-password"  = module.cloudsql.db_password
+    "sentrydom-database-url" = module.cloudsql.database_url
+    "sentrydom-jwt-secret"   = var.jwt_secret
     # Secret Manager rejects empty payloads, so fall back to a placeholder
     # until a real key is set - harmless since ALERT_EMAIL_ENABLED stays
     # false until sendgrid_api_key is non-empty (see cloud_run_api/worker env_vars).
-    "domainshield-sendgrid-api-key" = var.sendgrid_api_key != "" ? var.sendgrid_api_key : "not-configured"
+    "sentrydom-sendgrid-api-key" = var.sendgrid_api_key != "" ? var.sendgrid_api_key : "not-configured"
   }
 
   accessor_service_accounts = [
@@ -73,7 +73,7 @@ module "cloud_run_frontend" {
   source                = "../../modules/cloud-run"
   project_id            = var.project_id
   region                = var.region
-  service_name          = "domainshield-frontend"
+  service_name          = "sentrydom-frontend"
   image                 = var.frontend_image
   network_id            = module.network.network_id
   subnet_id             = module.network.subnet_id
@@ -86,7 +86,7 @@ module "cloud_run_api" {
   source             = "../../modules/cloud-run"
   project_id         = var.project_id
   region             = var.region
-  service_name       = "domainshield-api"
+  service_name       = "sentrydom-api"
   image              = var.api_image
   network_id         = module.network.network_id
   subnet_id          = module.network.subnet_id
@@ -104,7 +104,7 @@ module "cloud_run_api" {
   allow_unauthenticated = true
 
   env_vars = {
-    GCS_BUCKET_NAME = "${var.project_id}-domainshield-screenshots"
+    GCS_BUCKET_NAME = "${var.project_id}-sentrydom-screenshots"
     PUBSUB_TOPIC_ID = module.pubsub.topic_name
     GCP_PROJECT_ID  = var.project_id
     ENVIRONMENT     = "production"
@@ -115,7 +115,7 @@ module "cloud_run_api" {
     # could end up being what a user actually loads.
     CORS_ORIGINS = jsonencode([
       module.cloud_run_frontend.url,
-      "https://domainshield-frontend-${data.google_project.current.number}.${var.region}.run.app",
+      "https://sentrydom-frontend-${data.google_project.current.number}.${var.region}.run.app",
       "http://localhost:3000",
       "http://127.0.0.1:3000",
     ])
@@ -127,16 +127,16 @@ module "cloud_run_api" {
     SMTP_USER           = "apikey"
     SMTP_FROM           = var.sendgrid_from_email
     ALERT_EMAIL_ENABLED = var.sendgrid_api_key != "" ? "true" : "false"
-    # Overrides config.py's placeholder app.domainshield.io default - we have
+    # Overrides config.py's placeholder app.sentrydom.io default - we have
     # no custom domain yet, so scan-alert email links and invite links need
     # to point at the actual Cloud Run frontend URL instead of 404ing.
     APP_URL = module.cloud_run_frontend.url
   }
 
   secret_env_vars = {
-    DATABASE_URL  = module.secrets.secret_ids["domainshield-database-url"]
-    JWT_SECRET    = module.secrets.secret_ids["domainshield-jwt-secret"]
-    SMTP_PASSWORD = module.secrets.secret_ids["domainshield-sendgrid-api-key"]
+    DATABASE_URL  = module.secrets.secret_ids["sentrydom-database-url"]
+    JWT_SECRET    = module.secrets.secret_ids["sentrydom-jwt-secret"]
+    SMTP_PASSWORD = module.secrets.secret_ids["sentrydom-sendgrid-api-key"]
   }
 
   extra_sa_roles = [
@@ -148,7 +148,7 @@ module "cloud_run_worker" {
   source       = "../../modules/cloud-run"
   project_id   = var.project_id
   region       = var.region
-  service_name = "domainshield-worker"
+  service_name = "sentrydom-worker"
   image        = var.worker_image
   network_id   = module.network.network_id
   subnet_id    = module.network.subnet_id
@@ -164,7 +164,7 @@ module "cloud_run_worker" {
   allow_unauthenticated = false
 
   env_vars = {
-    GCS_BUCKET_NAME = "${var.project_id}-domainshield-screenshots"
+    GCS_BUCKET_NAME = "${var.project_id}-sentrydom-screenshots"
     GCP_PROJECT_ID  = var.project_id
     ENVIRONMENT     = "production"
     # send_threat_alert() runs inside the scan pipeline, so the worker needs
@@ -174,17 +174,17 @@ module "cloud_run_worker" {
     SMTP_USER           = "apikey"
     SMTP_FROM           = var.sendgrid_from_email
     ALERT_EMAIL_ENABLED = var.sendgrid_api_key != "" ? "true" : "false"
-    # Overrides config.py's placeholder app.domainshield.io default - the
+    # Overrides config.py's placeholder app.sentrydom.io default - the
     # "Review in DomainShield" button in scan-alert emails links here.
     APP_URL = module.cloud_run_frontend.url
   }
 
   secret_env_vars = {
-    DATABASE_URL = module.secrets.secret_ids["domainshield-database-url"]
+    DATABASE_URL = module.secrets.secret_ids["sentrydom-database-url"]
     # JWT_SECRET isn't used by worker logic, but Settings() validates it as
     # required at import time - omitting it would crash the container on boot.
-    JWT_SECRET    = module.secrets.secret_ids["domainshield-jwt-secret"]
-    SMTP_PASSWORD = module.secrets.secret_ids["domainshield-sendgrid-api-key"]
+    JWT_SECRET    = module.secrets.secret_ids["sentrydom-jwt-secret"]
+    SMTP_PASSWORD = module.secrets.secret_ids["sentrydom-sendgrid-api-key"]
   }
 }
 

@@ -8,5 +8,5 @@ variable "region" {
 
 variable "repository_id" {
   type    = string
-  default = "domainshield"
+  default = "sentrydom"
 }

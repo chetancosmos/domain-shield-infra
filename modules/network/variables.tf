@@ -8,7 +8,7 @@ variable "region" {
 
 variable "network_name" {
   type    = string
-  default = "domainshield-vpc"
+  default = "sentrydom-vpc"
 }
 
 variable "subnet_cidr" {

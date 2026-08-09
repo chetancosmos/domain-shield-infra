@@ -13,7 +13,7 @@ variable "network_id" {
 
 variable "instance_name" {
   type    = string
-  default = "domainshield-pg"
+  default = "sentrydom-pg"
 }
 
 variable "database_version" {
@@ -29,12 +29,12 @@ variable "tier" {
 
 variable "database_name" {
   type    = string
-  default = "domainshield"
+  default = "sentrydom"
 }
 
 variable "db_user" {
   type    = string
-  default = "domainshield_app"
+  default = "sentrydom_app"
 }
 
 variable "deletion_protection" {

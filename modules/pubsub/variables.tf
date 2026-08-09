@@ -4,7 +4,7 @@ variable "project_id" {
 
 variable "topic_name" {
   type    = string
-  default = "domainshield-scan-jobs"
+  default = "sentrydom-scan-jobs"
 }
 
 variable "push_endpoint" {

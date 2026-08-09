@@ -2,7 +2,7 @@ project_id = "project-e81a57d7-c451-4010-8d6"
 region     = "asia-south1"
 
 github_owner     = "chetancosmos"
-github_repo_name = "domain-shield-backend"
+github_repo_name = "sentrydom-backend"
 
 # Backend work is currently happening on feature-gcp, not main. Switch this
 # back to "^main$" once that branch is merged.
